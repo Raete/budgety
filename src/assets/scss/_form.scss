@@ -1,0 +1,115 @@
+/***** FORM *****/
+input[type=radio] {
+    position: absolute;
+    visibility: hidden;
+    display: none;
+}
+
+.add_container {
+    display: grid;
+    grid-template-columns: 1fr 2fr 2fr 1fr;
+    grid-column-gap: 10px;
+    justify-content: space-between;
+    align-items: center;
+    margin: 20px 0;
+    background: $color-bg--light;
+    padding: 20px 40px;
+    border-radius: $radius;
+    box-shadow: 0 0px 5px 0 rgba($color_text, 0.1);
+}
+
+// -- mobil --
+@media screen and (max-width: 800px) {
+    .add_container {
+        grid-template-columns: 1fr;
+        grid-template-rows: 1fr 1fr 1fr;
+        grid-row-gap: 15px;
+    }
+    .switcher {
+        margin: 0 auto;
+
+    }
+}
+
+
+// switch incomes and expenses
+.switcher {
+    display: inline-block;
+    padding: 4px;
+    border-radius: 2px;
+    width: 210px;
+    border-radius: 30px;
+    position: relative;
+    &_input {
+        display: none;
+    }
+    &_label {
+        float: left;
+        width: 50%;
+        font-size: 1rem;
+        line-height: 30px;
+        color: $color_negative;
+        text-align: center;
+        cursor: pointer;
+        position: inherit;
+        z-index: 10;
+        transition: color 0.2s cubic-bezier(0.4, 0.0, 0.2, 1);
+        will-change: transform;
+    }
+    &_toggle {
+        position: absolute;
+        float: left;
+        height: 30px;
+        width: 50%;
+        font-size: 12px;
+        line-height: 30px;
+        cursor: pointer;
+        background: $color_positive;
+        border-radius: 30px;
+        left: 5px;
+        top: 4px;
+        transition: left 0.25s cubic-bezier(0.4, 0.0, 0.2, 1);
+        will-change: transform;
+    }
+}
+
+.switcher_input:checked + .switcher_label {
+    color: #fff;
+}
+
+.switcher_input--exp:checked ~ .switcher_toggle {
+    left: 100px;
+}
+
+.add_btn {
+    display: inline-block;
+    background: $color_positive;
+    color: $color-bg--light;
+    padding: 10px 40px;
+    border-radius: 50px;
+    text-transform: uppercase;
+    text-align: center;
+    transition: 0.3s;
+    cursor: pointer;
+    &:hover {
+        background: darken( $color_positive, 5% );
+        box-shadow: 0 10px 20px 0 rgba($color_positive, 0.3);
+    }
+}
+
+// color changing
+.background_inc {
+    background: $color_positive;
+}
+
+.color_inc {
+    color: $color_positive;
+}
+
+.background_exp {
+    background: $color_negative;
+}
+
+.color_exp {
+    color: $color_negative;
+}
