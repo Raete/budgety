@@ -147,31 +147,16 @@ export default {
                 }
             })
         })
+       
         // create empty budget collection form current user 
         this.createUserBudget()
 
 
-        db.collection('budgets').where('from', '==', this.$route.params.id).get()
-        .then(snapshot => {
-            snapshot.forEach(doc => {
-                this.budget.inc = doc.data().inc
-                this.budget.exp = doc.data().exp
-                this.budget.totalInc = doc.data().totalInc
-                this.budget.totalExp = doc.data().totalExp
-
-                console.log("doc.data " + doc.data().inc)
-                console.log("doc.data "+ doc.data().exp)
-
-                console.log("local " + this.budget.inc)
-                console.log("local "+ this.budget.exp)
-            })
-        })
+       
 
        
         //calculate budget    
-        this.totalInc()
-        this.totalExp()
-        this.totalBudget()
+        this.calculateBudget()
 
 
      
@@ -197,33 +182,31 @@ export default {
             sum = sum.reduce((a, b) => a + b, 0);
             return sum
         },
-        // calculate total incomes
-        totalInc(){
-             db.collection('budgets').where('from', '==', this.$route.params.id).get()
-                .then(snapshot => {
-                snapshot.forEach(doc => {
-                    this.budget.inc = doc.data().inc
-                    this.budget.totalInc = this.sumValues(this.budget.inc)
-                    console.log("local data "+ this.budget.totalInc)
-                })
-            })
-        },
-        // calculate total expenses
-        totalExp(){
-             db.collection('budgets').where('from', '==', this.$route.params.id).get()
-                .then(snapshot => {
-                snapshot.forEach(doc => {
-                    this.budget.exp = doc.data().exp
-                    this.budget.totalExp = this.sumValues(this.budget.exp)
-                    console.log("local data "+ this.budget.totalExp)
-                })
-            })
-        },
-        // calculate available budget
-        totalBudget(){
 
-            return this.budget.totalBudget = this.budget.totalInc - this.budget.totalExp
+        calculateBudget(){
+            db.collection('budgets').where('from', '==', this.$route.params.id)
+                .onSnapshot((snapshot) => {
+                snapshot.docChanges().forEach(change => {
+                    // calculate incomes
+                    this.budget.inc = change.doc.data().inc
+                    this.budget.totalInc = this.sumValues(this.budget.inc)
+
+                    // calculate expenses
+                    this.budget.exp = change.doc.data().exp
+                    this.budget.totalExp = this.sumValues(this.budget.exp)
+                    
+                    // calculate total budget
+                    this.budget.totalBudget = this.budget.totalInc - this.budget.totalExp
+             
+                console.log("change enc:"+ this.budget.totalInc)
+                console.log("change exp:"+ this.budget.totalExp)
+                    console.log("change total:"+ this.budget.totalBudget)
+                })
+            })
         },
+
+
+
         // change color //
         type(){},
         // color changer
@@ -335,8 +318,6 @@ export default {
                         from: this.$route.params.id,
                         inc: this.budget.inc,
                         exp: this.budget.exp,
-                        totalInc: this.budget.totalInc,
-                        totalExp: this.budget.totalExp
                     }).catch(err => {
                         console.log(err)
                     })
@@ -349,8 +330,6 @@ export default {
                // from: this.$route.params.id,
                 inc: this.budget.inc,
                 exp: this.budget.exp,
-                totalInc: this.budget.totalInc,
-                totalExp: this.budget.totalExp
                 }).catch(err => {
                 console.log(err)
             })
