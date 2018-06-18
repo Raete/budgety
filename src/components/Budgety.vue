@@ -15,26 +15,26 @@
             <section class="summary">
                 <div class="summary_item ">
                     <h1 class="summary_title">Available budget</h1>
-                    <p class="summary_num">+ 20.00</p>
+                    <p class="summary_num">{{budget.totalBudget}}</p>
                 </div>
                 <div class="summary_item summary_item--inc">
                    <h1 class="summary_title">Incomes</h1>
-                    <p class="summary_num">+ 2,000.00</p>
+                    <p class="summary_num">+ {{budget.totalInc}}</p>
                 </div>
                 <div class="summary_item summary_item--exp">
                     <h1 class="summary_title">Expenses</h1>
-                    <p class="summary_num">+ 2,000.00</p>
+                    <p class="summary_num">- {{budget.totalExp}}</p>
                 </div>
             </section>
             <form class="add_container"  @submit.prevent="addTransaction">
                 <div class="switcher">
-                    <input @change="color()"  type="radio" name="balance" value="inc" id="income" class="switcher_input switcher_input--inc" v-model="inputs.type" checked>
-                    <label for="income" class="switcher_label">Incomes</label>
+                    <input @change="type()"  type="radio" name="balance" value="inc" id="income" class="switcher_input switcher_input--inc" v-model="inputs.type" checked>
+                    <label for="income" class="switcher_label" v-bind:class="changeColor()">Incomes</label>
                     
-                    <input @change="color()" type="radio" name="balance" value="exp" id="expenses" class="switcher_input switcher_input--exp" v-model="inputs.type">
+                    <input @change="type()" type="radio" name="balance" value="exp" id="expenses" class="switcher_input switcher_input--exp" v-model="inputs.type">
                     <label for="expenses" class="switcher_label">Expenses</label>
                     
-                    <span class="switcher_toggle" v-bind:class="{ }"></span>
+                    <span class="switcher_toggle" v-bind:class="changeBackground()"></span>
                 </div>
                 <div class="group">
                     <label for="sign_user" class="group_label">Value</label>
@@ -45,33 +45,36 @@
                     <input id="sign_pass" type="text" v-model="inputs.title"  class="group_input group_des">
                 </div>
             
-                <button class="add_btn" v-bind:class="{}">add</button>
+                <button class="add_btn" v-bind:class="changeBackground()">add</button>
             </form>
             <section class="transaction">
                 <ul class="transaction_list">
-                    <li :data-id="itemId" class="transaction_item" v-for="transaction in transactions" :key="transaction.id">
+                    <li class="transaction_item" v-for="transaction in transactions" :key="transaction.id">
                         <div class="item_des">
                             <span class="item_date">{{transaction.date}}</span>
-                            <h1 class="item_text">{{transaction.title}}</h1>{{transaction.id}}
+                            <h1 class="item_text">{{transaction.title}}</h1>
                            
                         </div>
                         <div class="item_value">
-                            <div class="item_num" v-bind:class="{  }">{{transaction.value}}</div>
+                            <div class="item_num" v-bind:class="transaction.color">{{transaction.mark}}  {{formatNub(transaction.value)}}</div>
                             <img @click="deleteTransaction(transaction.id)" class="item_delete" src="@/assets/img/delete.svg" alt="">
                         </div>
                     </li>
                 </ul>
-                {{person.feedback}} <br>
+                <p class="feedback">{{person.feedback}}</p>
 
-                
-               
-                
-             
+            
+                <!--
+                    mazat hodnotu z pole inc or exp
+                    vypočítat total budget a vyrendrovat
+                    real tim update
+                -->
             </section>
         </main>
 
     </div>
 </template>
+
 
 
 
@@ -88,107 +91,274 @@ export default {
                 profile: null,
                 user: null,
                 username: null,  
-                feedback: "You have no transaction", 
+                feedback: null, 
             },
             inputs: {
-                type: null,
+                type: "inc",
                 title: null,  
                 value: null 
             },
+           
+            transactions: [],
 
-            transactions: [ ],
-itemId: null
+            budget: {
+                inc: [],
+                exp: [],
+                totalInc: 0,
+                totalExp: 0,
+                totalBudget: null
+            },
+            budgety: null,
+           
+
+
+            colors: {
+                color: null,
+            }
+
             
 
         }
     },
-    created(){
-        let ref = db.collection('users')
 
-        // current user
-        ref.where('user_id', '==', firebase.auth().currentUser.uid).get()
+    created(){
+        // get current user from firebase
+        db.collection('users').where('user_id', '==', firebase.auth().currentUser.uid).get()
         .then(snapshot => {
             snapshot.forEach(doc => {
                 this.person.user = doc.data()
                 this.person.user.id = doc.id
             })
         })
-
         // data from current user
-        ref.doc(this.$route.params.id).get()
+        db.collection('users').doc(this.$route.params.id).get()
         .then(user => {
             this.person.profile = user.data()
             this.person.username = this.person.profile.alias
-        })    
-
-        // watch added transactions from current user
-        db.collection('transactions').where('from', '==', this.$route.params.id)
-        .onSnapshot((snapshot) => {
+        })   
+        // render current user's transactions from firebase to the DOM
+        db.collection('transactions').where('from', '==', this.$route.params.id).orderBy('date')
+            .onSnapshot((snapshot) => {
             snapshot.docChanges().forEach(change => {
-                if(change.type == 'added'){
-                    this.transactions.push({
-                        from: change.doc.data().from,
-                        title: change.doc.data().title,
-                        date: moment(change.doc.data().time).format('lll'),
-                        type: change.doc.data().type,
-                        value: change.doc.data().value,
-                        id: change.doc.data().id,
-                    })
+                if (change.type == 'added') {
+                    let transaction = change.doc.data()
+                    transaction.id = change.doc.id
+                    this.transactions.unshift(transaction)
                 }
+            })
+        })
+        // create empty budget collection form current user 
+        this.createUserBudget()
+
+
+        db.collection('budgets').where('from', '==', this.$route.params.id).get()
+        .then(snapshot => {
+            snapshot.forEach(doc => {
+                this.budget.inc = doc.data().inc
+                this.budget.exp = doc.data().exp
+                this.budget.totalInc = doc.data().totalInc
+                this.budget.totalExp = doc.data().totalExp
+
+                console.log("doc.data " + doc.data().inc)
+                console.log("doc.data "+ doc.data().exp)
+
+                console.log("local " + this.budget.inc)
+                console.log("local "+ this.budget.exp)
             })
         })
 
        
-        // get transaction id
-        db.collection('transactions').where('from', '==', this.$route.params.id).get()
-            .then(snapshot => {
-                snapshot.forEach(doc => {
-                let transaction = doc.data()
-                transaction.id = doc.id
-                //console.log(transaction.id)
-            
-            })
-        })
-    
+        //calculate budget    
+        this.totalInc()
+        this.totalExp()
+        this.totalBudget()
+
+
+     
+        console.log(firebase.auth().currentUser.uid)
     },
 
-    mounted(){
-
+    updated(){
+        // feedback setting if no transactions
+        db.collection('transactions').get()
+        .then(snapshot => {
+            if (snapshot.size == 0) {
+                this.person.feedback = "You have no transactions."
+            } else {
+                this.person.feedback = null
+            }
+        })    
     },
 
     methods: {
+        // calculate budget //
+        // sum values in array
+        sumValues(sum){
+            sum = sum.reduce((a, b) => a + b, 0);
+            return sum
+        },
+        // calculate total incomes
+        totalInc(){
+             db.collection('budgets').where('from', '==', this.$route.params.id).get()
+                .then(snapshot => {
+                snapshot.forEach(doc => {
+                    this.budget.inc = doc.data().inc
+                    this.budget.totalInc = this.sumValues(this.budget.inc)
+                    console.log("local data "+ this.budget.totalInc)
+                })
+            })
+        },
+        // calculate total expenses
+        totalExp(){
+             db.collection('budgets').where('from', '==', this.$route.params.id).get()
+                .then(snapshot => {
+                snapshot.forEach(doc => {
+                    this.budget.exp = doc.data().exp
+                    this.budget.totalExp = this.sumValues(this.budget.exp)
+                    console.log("local data "+ this.budget.totalExp)
+                })
+            })
+        },
+        // calculate available budget
+        totalBudget(){
+
+            return this.budget.totalBudget = this.budget.totalInc - this.budget.totalExp
+        },
+        // change color //
+        type(){},
+        // color changer
+        changeBackground(){
+            if (this.inputs.type == "exp") {
+                return "background--exp"
+            } 
+        },
+        changeColor(){
+            if (this.inputs.type == "exp") {
+                return "color--inc"
+            } 
+        },
+
+        changeState(){
+            if (this.inputs.type == "inc") {
+               return "color--inc"
+
+            } else if (this.inputs.type == "exp") {
+                return "color--exp"
+
+                }
+        },
+        // set income or expense mark
+        setMark(){
+            if (this.inputs.type == "inc") {
+                return "+"
+            } else {
+                return "-"
+            }
+        },
+
+        formatNub(num){ 
+            num = Math.abs(num);
+            num = num.toLocaleString(undefined, {
+                minimumFractionDigits: 2,
+                maximumFractionDigits: 2
+            })
+            return num
+        },
+
+
+        // logout current user redirect to login page
         logout(){
             firebase.auth().signOut().then(() => {
                 this.$router.push({ name: 'Login'})
             })
         },
 
+        // get data from inputs fields and add them to the firestore
         addTransaction(){
-        
             if (this.inputs.title && this.inputs.value) {
                 this.person.feedback = null
-
+               //push value in input to the budget array
+                if (this.inputs.type == "inc") {
+                    this.budget.inc.push(Number(this.inputs.value))
+                    console.log("add data inc"+ this.budget.inc)
+                    
+                } else if (this.inputs.type == "exp") {
+                    this.budget.exp.push(Number(this.inputs.value))
+                    console.log("add data exp"+ this.budget.exp)
+                }
+              
+        
                 db.collection('transactions').add({
                     from: this.$route.params.id,
-                    title: this.inputs.title,
-                    date: Date.now(),
-                    value: this.inputs.value,
                     type: this.inputs.type,
-                  
-                }).then(doc => {
-                    
-                    this.inputs.title = null
-                    this.inputs.value = null
+                    mark: this.setMark(),
+                    color: this.changeState(),
+                    date: moment(Date.now()).format('lll'),
+                    title: this.inputs.title,
+                    value: Number(this.inputs.value),
+
+                }).then(() => {
+                    this.inputs.title = ""
+                    this.inputs.value = ""
+
+                }).catch(err => {
+                    console.log(err)
                 })
+
             } else {
-                this.person.feedback = 'You must add value and description'
+                this.person.feedback = 'You must fill in all fields'
             }
+            this.setMark()
+            this.person.feedback = null
+            this.updateBudget()
+
+            
+            
+        },
+        // delete data from firestore and DOM
+        deleteTransaction(id){
+          db.collection('transactions').doc(id).delete()
+            .then(() => {
+                this.transactions = this.transactions.filter(transaction => {
+                return transaction.id != id
+                })
+            }).catch(err => {
+                console.log(err)
+            })
+        },
+        // create empty budget collection 
+        createUserBudget(){
+            db.collection('budgets').where('from', '==', this.$route.params.id).get()
+            .then(snapshot => {
+                if (snapshot.size == 0) {
+                    db.collection('budgets').doc(firebase.auth().currentUser.uid).set({
+                        from: this.$route.params.id,
+                        inc: this.budget.inc,
+                        exp: this.budget.exp,
+                        totalInc: this.budget.totalInc,
+                        totalExp: this.budget.totalExp
+                    }).catch(err => {
+                        console.log(err)
+                    })
+                } 
+            }) 
         },
 
-        deleteTransaction(id){
-            console.log(id)
-          
-        }
+        updateBudget(){
+            db.collection('budgets').doc(firebase.auth().currentUser.uid).update({
+               // from: this.$route.params.id,
+                inc: this.budget.inc,
+                exp: this.budget.exp,
+                totalInc: this.budget.totalInc,
+                totalExp: this.budget.totalExp
+                }).catch(err => {
+                console.log(err)
+            })
+        },
+
+        
+
+    
     }
 }
 </script>
@@ -262,6 +432,10 @@ itemId: null
     color: darken( $color-bg--light, 40% );
 }
 
+.item_delete {
+    cursor: pointer;
+}
+
 .item_text {
     font-size: 1em;
 }
@@ -270,13 +444,6 @@ itemId: null
     display: flex;
 }
 
-.background {
-    background: $color_negative
-}
-
-.color {
-    color: $color_negative
-}
 
 .item_num {
     font-size: 1em;
@@ -289,5 +456,24 @@ itemId: null
         color: $color_negative
     }
 }
+
+.color--inc {
+    color: $color_positive;
+}
+
+.color--exp {
+    color: $color_negative;
+}
+
+.background{
+    &--exp {
+        background: $color_negative;
+        &:hover {
+            background: darken( $color_negative, 5% );
+            box-shadow: 0 10px 20px 0 rgba($color_negative, 0.3);
+        }
+    }
+}
+
 
 </style>
