@@ -51,6 +51,7 @@ button {
     border: 0;
 }
 
+// navbar
 .nav {
     background: $color-bg--light;
     box-shadow: 0 4px 8px 0 rgba($color_text, .03);
@@ -64,6 +65,7 @@ button {
         margin: 0 auto;
     }
     &_logo {
+        height: 45px;
         padding: 0 15px;
     }
     &_control {
@@ -102,7 +104,7 @@ button {
         }
     }
 }
-
+// inputs
 .group {
     margin-bottom: 15px;
      width: 100%;
@@ -130,9 +132,24 @@ button {
         }
     }
 }
+// footer
+.footer {
+    text-align: center;
+    font-size: .8em;
+    padding: 10px;
+    &_web {
+        margin-right: 20px;
+        transition: .4s;
+        &:hover {
+            color: $color_positive;
+        }
+    }
+    &_img {
+        color: darken( $color-bg--light, 30% );
+    }
+}
 
-
-
+// feedback
 .feedback {
     color: $color_negative;
     font-size: 0.8em;
