@@ -32,7 +32,7 @@
                         </div>                 
                    
                     </form>
-                    <p class="demo"><a href="">Try demo</a></p>
+                    <p class="demo"><a href="http://www.janakoudelkova.cz/store/weby/budgety_demo" target="_blank">Try demo</a></p>
                 </div><!-- END login form-->
 
     <!-- .............................. FLIP ................................. -->
@@ -62,7 +62,7 @@
                     
                         <p class="info"> *You don't need to use a real email to sign up. There is no verification. </p>
                     </form>
-                    <p class="demo"><a href="http://www.janakoudelkova.cz/store/weby/budgety" target="_blank">Try demo</a></p>
+                    <p class="demo"><a href="http://www.janakoudelkova.cz/store/weby/budgety_demo" target="_blank">Try demo</a></p>
                 </div><!-- END  sing up form -->
             </transition>
             <!-- bacground img - animated svg -->

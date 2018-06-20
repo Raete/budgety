@@ -7,21 +7,22 @@ import Budgety from '@/components/Budgety'
 Vue.use(Router)
 
 const router = new Router({
-  routes: [
-    {
-        path: '/budgety/:id',
-      name: 'Budgety',
-      component: Budgety,
-      meta: {
-        requiresAuth: true
-    }
-    },
-    {
-        path: '/',
-        name: 'Login',
-        component: Login
-    },
-  ]
+    mode: "history",
+    routes: [
+        {
+            path: '/budgety/:id',
+            name: 'Budgety',
+            component: Budgety,
+            meta: {
+                requiresAuth: true
+            }
+        },
+        {
+            path: '/',
+            name: 'Login',
+            component: Login
+        },
+    ]
 })
 
 // router guards
