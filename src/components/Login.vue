@@ -3,7 +3,7 @@
         <nav class="nav">
             <div class="nav_wrap">
                 
-                   <h1 class="nav_logo">budgety.</h1>
+                <img src="@/assets/img/logo.svg" class="nav_logo" alt="budgety">
                
                 <ul class="nav_control">
                     <li class="nav_item" v-on:click="showLogIn">Login</li>
@@ -12,7 +12,7 @@
             </div>
         </nav>
         <main class="container">
-
+            <!-- login form -->
             <transition name="scale" tag="div">   
                 <div key="1" class="log_form" v-if="logIn">
                     <form class="log_form_wrap" @submit.prevent="login">
@@ -33,10 +33,11 @@
                    
                     </form>
                     <p class="demo"><a href="">Try demo</a></p>
-                </div><!-- END LOGIN FORM-->
-        
+                </div><!-- END login form-->
+
     <!-- .............................. FLIP ................................. -->
 
+                <!-- sing up form -->
                 <div key="2" class="log_form" v-if="singUp"  ><!-- form background -->
                     <form class="log_form_wrap" @submit.prevent="signup">
                         <h1 class="log_form_name">Sign up</h1>
@@ -62,10 +63,15 @@
                         <p class="info"> *You don't need to use a real email to sign up. There is no verification. </p>
                     </form>
                     <p class="demo"><a href="http://www.janakoudelkova.cz/store/weby/budgety" target="_blank">Try demo</a></p>
-                </div><!-- END  SING UP FORM-->
+                </div><!-- END  sing up form -->
             </transition>
-            <img src="@/assets/img/back.svg" alt="" class="img">
+            <!-- bacground img - animated svg -->
+            <div class="back_container">
+                <img src="@/assets/img/back-a.svg" alt="" class="img">
+                <img src="@/assets/img/back.svg" alt="" class="img">
+            </div>
         </main>
+        <!-- footer -->
         <footer class="footer">
             <a class="footer_web" href='http://www.janakoudelkova.cz' target="_blank">create by Jana koudelková </a> 
             <a class="footer_img" href='https://www.freepik.com/free-vector/finance-concept-with-colorful-elements_1305299.htm' target="_blank">(image from Freepik)</a>
@@ -83,8 +89,8 @@ export default {
     name: 'Login',
     data () {
         return {
-            singUp: true,
-            logIn: false,
+            singUp: false,
+            logIn: true,
             user: null,
             alias: null,
             email: null,
@@ -148,7 +154,7 @@ export default {
             }
         },
 
-         login(){
+        login(){
             if (this.email && this.password) {
                 this.feedback = null
                 firebase.auth().signInWithEmailAndPassword(this.email, this.password)
@@ -168,8 +174,6 @@ export default {
                 this.feedback = 'Please fill in all fields'
             }
         },
-
-        
     }
 }
 </script>
@@ -238,8 +242,6 @@ export default {
     }
 }
 
-
-
 .button {
     text-transform: uppercase;
     border: none;
@@ -261,36 +263,42 @@ export default {
         outline: none
     }
 }
-
+// info about e-mails
 .info {
     font-size: 0.8em;
     color: $color_text;
 } 
-
+// demo button
 .demo {
     display: inline-block;
-    color: $color-bg--light;
-    background: darken( $color-bg--light, 30% );
+    color: $color_positive;
     font-weight: 700;
     padding: 15px;
     margin-top: 15px;
     border-radius: 50px;
     transition: .4s;
     &:hover {
-        background: $color_positive;
+        color: $color_negative;
     }
+}
+// background images
+.back_container {
+    position: absolute;
+    width: 80%;
+    right: 0;
+    top: 30%
 }
 
 .img {
-    width: 80%;
+    width: 100%;
     position: absolute;
-    right: 0;
+   // right: 0;
 }
 
 
 // -- mobil --
 @media screen and (max-width: 800px) {
-    .img {
+    .back_container {
         top: 0;
         left: 9%;
 
@@ -298,20 +306,6 @@ export default {
 }
 
 
-.footer {
-    text-align: center;
-    font-size: .8em;
-    padding: 10px;
-    &_web {
-        margin-right: 20px;
-        transition: .4s;
-        &:hover {
-            color: $color_positive;
-        }
-    }
-    &_img {
-        color: darken( $color-bg--light, 30% );
-    }
-}
+
 
 </style>
